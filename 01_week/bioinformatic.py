@@ -9,3 +9,9 @@ for i in lis:
 
 def say_hello():
     print('hello!')
+
+set1 = set([7, 8, 9])
+set2 = set([5, 6, 7, 8, 9, 10])
+
+set2.issuperset(set1)
+set1.issuperset(set2)
