@@ -15,3 +15,11 @@ set2 = set([5, 6, 7, 8, 9, 10])
 
 set2.issuperset(set1)
 set1.issuperset(set2)
+
+set1 = set([1, 3, 5])
+set2 = set([1, 2, 3])
+
+set1.intersection(set2)
+set2.intersection(set1)
+
+set1 & set2
