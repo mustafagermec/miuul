@@ -10,14 +10,14 @@ for i in lis:
 def say_hello():
     print('hello!')
 
-set1 = set([7, 8, 9])
-set2 = set([5, 6, 7, 8, 9, 10])
+set1 = {7, 8, 9}
+set2 = {5, 6, 7, 8, 9, 10}
 
 set2.issuperset(set1)
 set1.issuperset(set2)
 
-set1 = set([1, 3, 5])
-set2 = set([1, 2, 3])
+set1 = {1, 3, 5}
+set2 = {1, 2, 3}
 
 set1.intersection(set2)
 set2.intersection(set1)
@@ -155,3 +155,58 @@ target_summary_with_num(df, "survived", "age")
 
 for col in num_cols:
    target_summary_with_num(df, "survived", col)
+
+import shap
+import numpy as np
+
+
+def perform_shap_analysis(model, X):
+    # Create an explainer object for the given model
+    explainer = shap.Explainer(model)
+
+    # Compute the Shapley values for the dataset
+    shap_values = explainer.shap_values(X)
+
+    # Compute the average absolute Shapley value for each feature
+    avg_shap_values = np.abs(shap_values).mean(axis=0)
+
+    # Return the average Shapley values for each feature
+    return avg_shap_values
+
+
+import optuna
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+
+
+def optimize_hyperparameters(X, y):
+    # Define the search space for hyperparameters
+    search_space = {
+        'n_estimators': optuna.trial.IntUniformDistribution(10, 1000),
+        'ax_depth': optuna.trial.IntUniformDistribution(1, 50),
+        'in_samples_split': optuna.trial.IntUniformDistribution(2, 20),
+        'in_samples_leaf': optuna.trial.IntUniformDistribution(1, 10),
+        'ax_features': optuna.trial.CategoricalDistribution(['sqrt', 'log2', None]),
+        'criterion': optuna.trial.CategoricalDistribution(['gini', 'entropy'])
+    }
+
+    # Define the objective function to minimize
+    def objective(trial):
+        # Sample hyperparameters from the search space
+        params = {k: trial.suggest_int(k, v[0], v[1]) for k, v in search_space.items()}
+
+        # Train a random forest classifier with the sampled hyperparameters
+        clf = RandomForestClassifier(**params, n_jobs=-1)
+        scores = cross_val_score(clf, X, y, cv=5, scoring='accuracy')
+
+        # Return the average accuracy score
+        return scores.mean()
+
+    # Create a new Optuna study
+    study = optuna.create_study()
+
+    # Run the optimization
+    study.optimize(objective, n_trials=100)
+
+    # Return the best hyperparameters
+    return study.best_params
